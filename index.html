@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#C8302B">
+<title>Sổ quán ăn</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #EEF2EF;
+    --card: #FFFFFF;
+    --ink: #1B2A24;
+    --muted: #5E6F67;
+    --line: #D3DCD6;
+    --accent: #C8302B;
+    --accent-dark: #A32420;
+    --open: #2B7A4B;
+    --open-bg: #E1F1E7;
+    --closed-bg: #E7EAE8;
+    box-sizing: border-box;
+  }
+  *, *::before, *::after { box-sizing: inherit; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  button, input, select { font: inherit; color: inherit; }
+  :focus-visible { outline: 3px solid #1B6FD1; outline-offset: 2px; }
+
+  /* ---------- Thanh trên ---------- */
+  .top {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--ink);
+    color: #fff;
+    padding: 12px 16px;
+  }
+  .top-inner {
+    max-width: 1100px; margin: 0 auto;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .brand { flex: 1; min-width: 0; }
+  .brand h1 { margin: 0; font-size: 1.25rem; font-weight: 700; line-height: 1.2; }
+  .brand p { margin: 0; font-size: .8125rem; color: #B9C7BF; }
+  .btn {
+    border: 0; border-radius: 8px; cursor: pointer;
+    padding: 10px 16px; font-weight: 500; min-height: 44px;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-dark); }
+  .btn-primary[disabled] { opacity: .6; cursor: wait; }
+  .btn-ghost { background: transparent; color: inherit; border: 1px solid currentColor; }
+  .top .btn-ghost { color: #D6E0DA; border-color: #4C5F56; }
+  .btn-plain { background: #fff; border: 1px solid var(--line); color: var(--ink); }
+  .btn-plain:hover { background: #F5F8F6; }
+
+  /* ---------- Bộ lọc ---------- */
+  main { max-width: 1100px; margin: 0 auto; padding: 16px; }
+  .search {
+    width: 100%; min-height: 46px; padding: 10px 14px;
+    border: 1px solid var(--line); border-radius: 8px; background: #fff;
+  }
+  .chips {
+    display: flex; gap: 8px; margin: 12px -16px 0; padding: 0 16px 4px;
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip {
+    flex: none; cursor: pointer; white-space: nowrap;
+    min-height: 40px; padding: 6px 14px; border-radius: 999px;
+    background: #fff; border: 1px solid var(--line);
+  }
+  .chip .n { color: var(--muted); margin-left: 4px; font-size: .875rem; }
+  .chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .chip[aria-pressed="true"] .n { color: #B9C7BF; }
+  @media (min-width: 720px) {
+    .chips { flex-wrap: wrap; overflow: visible; margin: 12px 0 0; padding: 0; }
+  }
+  .result-line { margin: 16px 0 8px; color: var(--muted); font-size: .875rem; }
+
+  /* ---------- Danh sách ---------- */
+  .grid {
+    display: grid; gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    padding: 16px; display: flex; flex-direction: column; gap: 10px;
+  }
+  .card-head { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+  .card h2 { margin: 0; font-size: 1.125rem; line-height: 1.3; overflow-wrap: anywhere; }
+  .district {
+    flex: none; font-size: .8125rem; font-weight: 500;
+    padding: 2px 10px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line);
+  }
+  .dish { margin: 0; color: var(--muted); overflow-wrap: anywhere; }
+  .price { margin: 0; font-size: 1.375rem; font-weight: 700; color: var(--accent); line-height: 1.2; }
+  .addr { margin: 0; font-size: .9375rem; overflow-wrap: anywhere; }
+  .addr a { color: inherit; text-decoration-color: var(--line); text-underline-offset: 3px; }
+  .addr a:hover { text-decoration-color: var(--accent); }
+  .hours { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: .9375rem; }
+  .status { font-size: .8125rem; font-weight: 500; padding: 2px 10px; border-radius: 999px; }
+  .status.open { background: var(--open-bg); color: var(--open); }
+  .status.closed { background: var(--closed-bg); color: var(--muted); }
+  .card-actions { display: flex; gap: 8px; margin-top: auto; padding-top: 6px; }
+  .card-actions .btn { flex: 1; padding: 8px 12px; min-height: 40px; }
+  .btn-danger { color: var(--accent-dark); }
+
+  .empty {
+    text-align: center; padding: 40px 16px; background: #fff;
+    border: 1px dashed var(--line); border-radius: 10px;
+  }
+  .empty h2 { margin: 0 0 6px; font-size: 1.125rem; }
+  .empty p { margin: 0 0 16px; color: var(--muted); }
+
+  /* ---------- Hộp thoại ---------- */
+  dialog {
+    border: 0; padding: 0; border-radius: 14px; width: min(520px, calc(100% - 24px));
+    max-height: calc(100% - 24px); color: var(--ink); background: #fff;
+  }
+  dialog::backdrop { background: rgba(27, 42, 36, .55); }
+  .sheet { padding: 20px 18px 18px; }
+  .sheet h2 { margin: 0 0 14px; font-size: 1.25rem; }
+  .field { display: block; margin-bottom: 12px; }
+  .field > span { display: block; font-size: .875rem; font-weight: 500; margin-bottom: 4px; }
+  .field input, .field select {
+    width: 100%; min-height: 46px; padding: 9px 12px;
+    border: 1px solid #B6C3BB; border-radius: 8px; background: #fff;
+  }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .hint { margin: -6px 0 12px; font-size: .8125rem; color: var(--muted); }
+  .form-actions { display: flex; gap: 10px; margin-top: 16px; }
+  .form-actions .btn { flex: 1; }
+  .form-actions .btn-primary { flex: 2; }
+  .form-error { color: var(--accent-dark); font-size: .9375rem; margin: 8px 0 0; min-height: 1.4em; }
+  @media (max-width: 640px) {
+    dialog { width: 100%; max-width: 100%; margin: auto 0 0; border-radius: 16px 16px 0 0; max-height: 94%; }
+  }
+
+  /* ---------- Thông báo ---------- */
+  .toast {
+    position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%);
+    background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 8px;
+    max-width: calc(100% - 32px); z-index: 50; display: none; text-align: center;
+  }
+  .toast.show { display: block; }
+  .toast.err { background: var(--accent-dark); }
+
+  .banner {
+    background: #FFF3D6; border: 1px solid #E8CF8B; border-radius: 10px;
+    padding: 12px 14px; margin-bottom: 14px; font-size: .9375rem;
+  }
+  code { background: var(--bg); padding: 1px 6px; border-radius: 4px; font-size: .875em; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="brand">
+      <h1>Sổ quán ăn</h1>
+      <p id="subtitle">Đang tải…</p>
+    </div>
+    <button class="btn btn-ghost" id="btnCfg" type="button" aria-label="Cài đặt kết nối Supabase">Kết nối</button>
+    <button class="btn btn-primary" id="btnAdd" type="button">+ Thêm quán</button>
+  </div>
+</header>
+
+<main>
+  <div id="banner"></div>
+  <input class="search" id="search" type="search" placeholder="Tìm theo tên quán, món ăn, địa chỉ…" aria-label="Tìm quán ăn">
+  <div class="chips" id="chips" role="group" aria-label="Lọc theo quận"></div>
+  <p class="result-line" id="resultLine"></p>
+  <div class="grid" id="list"></div>
+</main>
+
+<!-- Hộp thoại thêm / sửa quán -->
+<dialog id="dlgForm" aria-labelledby="formTitle">
+  <form class="sheet" id="form" method="dialog" novalidate>
+    <h2 id="formTitle">Thêm quán ăn</h2>
+
+    <label class="field"><span>Tên quán</span>
+      <input name="ten_quan" required maxlength="120" autocomplete="off" placeholder="Ví dụ: Phở Hòa Pasteur">
+    </label>
+
+    <label class="field"><span>Địa chỉ chi tiết</span>
+      <input name="dia_chi" required maxlength="250" autocomplete="off" placeholder="Số nhà, đường, phường">
+    </label>
+
+    <label class="field"><span>Quận</span>
+      <input name="quan" required maxlength="60" list="dlDistricts" autocomplete="off" placeholder="Chọn hoặc nhập quận">
+      <datalist id="dlDistricts"></datalist>
+    </label>
+
+    <label class="field"><span>Tên món ăn</span>
+      <input name="ten_mon" required maxlength="200" autocomplete="off" placeholder="Nhiều món thì ngăn cách bằng dấu phẩy">
+    </label>
+
+    <div class="row">
+      <label class="field"><span>Giá thấp nhất (đ)</span>
+        <input name="gia_tu" type="number" inputmode="numeric" min="0" step="1000" required placeholder="30000">
+      </label>
+      <label class="field"><span>Giá cao nhất (đ)</span>
+        <input name="gia_den" type="number" inputmode="numeric" min="0" step="1000" required placeholder="60000">
+      </label>
+    </div>
+
+    <div class="row">
+      <label class="field"><span>Giờ mở cửa</span>
+        <input name="gio_mo" type="time" required value="07:00">
+      </label>
+      <label class="field"><span>Giờ đóng cửa</span>
+        <input name="gio_dong" type="time" required value="22:00">
+      </label>
+    </div>
+
+    <p class="form-error" id="formError" role="alert"></p>
+    <div class="form-actions">
+      <button class="btn btn-plain" type="button" id="btnCancel">Hủy</button>
+      <button class="btn btn-primary" type="submit" id="btnSave">Lưu quán</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Hộp thoại kết nối Supabase -->
+<dialog id="dlgCfg" aria-labelledby="cfgTitle">
+  <form class="sheet" id="cfgForm" method="dialog" novalidate>
+    <h2 id="cfgTitle">Kết nối Supabase</h2>
+    <p class="hint" style="margin-top:-8px">Lấy trong Supabase: Project Settings &rsaquo; API (hoặc API Keys). Thông tin được lưu trên trình duyệt này.</p>
+    <label class="field"><span>Project URL</span>
+      <input name="url" inputmode="url" autocomplete="off" placeholder="https://xxxx.supabase.co">
+    </label>
+    <label class="field"><span>Anon / Publishable key</span>
+      <input name="key" autocomplete="off" placeholder="eyJ… hoặc sb_publishable_…">
+    </label>
+    <p class="form-error" id="cfgError" role="alert"></p>
+    <div class="form-actions">
+      <button class="btn btn-plain" type="button" id="cfgCancel">Đóng</button>
+      <button class="btn btn-primary" type="submit">Lưu kết nối</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* ============================================================
+   CẤU HÌNH — có thể điền trực tiếp tại đây, hoặc bấm nút "Kết nối"
+   trên web để nhập (sẽ lưu trong trình duyệt).
+   ============================================================ */
+const SUPABASE_URL = "";   // ví dụ: "https://abcdxyz.supabase.co"
+const SUPABASE_KEY = "";   // anon key hoặc publishable key
+const TABLE = "quan_an";
+
+const HCM_DISTRICTS = ["Quận 1","Quận 3","Quận 4","Quận 5","Quận 6","Quận 7","Quận 8","Quận 10","Quận 11","Quận 12",
+  "Bình Thạnh","Gò Vấp","Phú Nhuận","Tân Bình","Tân Phú","Bình Tân","Thủ Đức",
+  "Bình Chánh","Hóc Môn","Củ Chi","Nhà Bè","Cần Giờ"];
+
+/* ---------- Tiện ích ---------- */
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const money = (n) => Number(n).toLocaleString("vi-VN") + "đ";
+const hhmm = (t) => String(t || "").slice(0, 5);
+const norm = (s) => String(s || "").trim().toLowerCase();
+const stripVN = (s) => norm(s).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d");
+
+let toastTimer;
+function toast(msg, isErr = false) {
+  const t = $("#toast");
+  t.textContent = msg;
+  t.className = "toast show" + (isErr ? " err" : "");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.className = "toast", isErr ? 5000 : 2500);
+}
+
+/* ---------- Kết nối Supabase (REST) ---------- */
+function getCfg() {
+  let url = SUPABASE_URL, key = SUPABASE_KEY;
+  try {
+    url = url || localStorage.getItem("sb_url") || "";
+    key = key || localStorage.getItem("sb_key") || "";
+  } catch (e) {}
+  url = url.trim().replace(/\/+$/, "").replace(/\/rest\/v1$/, "");
+  return { url, key: key.trim() };
+}
+const isConfigured = () => { const c = getCfg(); return /^https?:\/\//.test(c.url) && c.key.length > 10; };
+
+async function api(query = "", opts = {}) {
+  const { url, key } = getCfg();
+  const headers = {
+    apikey: key,
+    "Content-Type": "application/json",
+    ...(key.startsWith("eyJ") ? { Authorization: "Bearer " + key } : {}),
+    ...(opts.headers || {})
+  };
+  let res;
+  try {
+    res = await fetch(`${url}/rest/v1/${TABLE}${query}`, { ...opts, headers });
+  } catch (e) {
+    throw new Error("Không kết nối được Supabase. Kiểm tra mạng và Project URL.");
+  }
+  if (!res.ok) {
+    let msg = "";
+    try { const j = await res.json(); msg = j.message || j.hint || ""; } catch (e) {}
+    if (res.status === 401 || res.status === 403) msg = "Key không đúng hoặc chưa cấp quyền (chạy lại file supabase-setup.sql).";
+    if (res.status === 404 || /schema cache|does not exist/i.test(msg)) msg = "Chưa có bảng quan_an. Hãy chạy file supabase-setup.sql trong Supabase.";
+    throw new Error(msg || "Lỗi " + res.status);
+  }
+  return res.status === 204 ? null : res.json();
+}
+
+/* ---------- Trạng thái ---------- */
+let items = [];
+let districtFilter = "all";   // "all" hoặc khóa quận (chữ thường)
+let query = "";
+let editingId = null;
+
+async function load() {
+  if (!isConfigured()) { items = []; render(); return; }
+  $("#subtitle").textContent = "Đang tải…";
+  try {
+    items = await api("?select=*&order=created_at.desc");
+  } catch (e) {
+    items = [];
+    $("#banner").innerHTML = `<div class="banner">${esc(e.message)}</div>`;
+    $("#subtitle").textContent = "Chưa tải được dữ liệu";
+    renderList(true);
+    return;
+  }
+  render();
+}
+
+/* ---------- Hiển thị ---------- */
+function isOpenNow(open, close) {
+  const o = hhmm(open), c = hhmm(close);
+  if (!o || !c) return null;
+  const toMin = (s) => { const [h, m] = s.split(":").map(Number); return h * 60 + m; };
+  const now = new Date(); const cur = now.getHours() * 60 + now.getMinutes();
+  const a = toMin(o), b = toMin(c);
+  if (a === b) return true;
+  return a < b ? (cur >= a && cur < b) : (cur >= a || cur < b);
+}
+
+function districtGroups() {
+  const map = new Map();
+  items.forEach(it => {
+    const k = norm(it.quan);
+    if (!map.has(k)) map.set(k, { key: k, label: it.quan.trim(), count: 0 });
+    map.get(k).count++;
+  });
+  return [...map.values()].sort((a, b) => a.label.localeCompare(b.label, "vi", { numeric: true }));
+}
+
+function filtered() {
+  const q = stripVN(query);
+  return items.filter(it => {
+    if (districtFilter !== "all" && norm(it.quan) !== districtFilter) return false;
+    if (!q) return true;
+    return stripVN([it.ten_quan, it.ten_mon, it.dia_chi, it.quan].join(" ")).includes(q);
+  });
+}
+
+function render() {
+  if (isConfigured()) $("#banner").innerHTML = "";
+  $("#subtitle").textContent = isConfigured() ? `${items.length} quán đã lưu` : "Chưa kết nối Supabase";
+
+  // đảm bảo bộ lọc hiện tại còn tồn tại
+  const groups = districtGroups();
+  if (districtFilter !== "all" && !groups.some(g => g.key === districtFilter)) districtFilter = "all";
+
+  $("#chips").innerHTML =
+    `<button class="chip" type="button" data-d="all" aria-pressed="${districtFilter === "all"}">Tất cả<span class="n">${items.length}</span></button>` +
+    groups.map(g => `<button class="chip" type="button" data-d="${esc(g.key)}" aria-pressed="${districtFilter === g.key}">${esc(g.label)}<span class="n">${g.count}</span></button>`).join("");
+
+  // gợi ý quận trong form: quận HCM + quận đã nhập
+  const opts = new Set([...HCM_DISTRICTS, ...groups.map(g => g.label)]);
+  $("#dlDistricts").innerHTML = [...opts].map(d => `<option value="${esc(d)}"></option>`).join("");
+
+  renderList();
+}
+
+function renderList(errorState = false) {
+  const list = $("#list");
+  if (errorState) { list.innerHTML = ""; $("#resultLine").textContent = ""; return; }
+
+  if (!isConfigured()) {
+    $("#resultLine").textContent = "";
+    list.innerHTML = `<div class="empty" style="grid-column:1/-1">
+      <h2>Kết nối Supabase để bắt đầu</h2>
+      <p>Nhập Project URL và key của dự án Supabase để lưu và xem danh sách quán.</p>
+      <button class="btn btn-primary" type="button" id="btnCfgEmpty">Nhập thông tin kết nối</button></div>`;
+    return;
+  }
+
+  const rows = filtered();
+  $("#resultLine").textContent = rows.length === items.length
+    ? `${rows.length} quán`
+    : `${rows.length} / ${items.length} quán`;
+
+  if (!rows.length) {
+    list.innerHTML = items.length
+      ? `<div class="empty" style="grid-column:1/-1"><h2>Không có quán phù hợp</h2><p>Thử đổi quận hoặc từ khóa tìm kiếm.</p></div>`
+      : `<div class="empty" style="grid-column:1/-1"><h2>Chưa có quán nào</h2><p>Thêm quán đầu tiên vào danh sách.</p><button class="btn btn-primary" type="button" id="btnAddEmpty">+ Thêm quán</button></div>`;
+    return;
+  }
+
+  list.innerHTML = rows.map(it => {
+    const open = isOpenNow(it.gio_mo, it.gio_dong);
+    const priceText = it.gia_tu === it.gia_den ? money(it.gia_tu) : `${money(it.gia_tu)} – ${money(it.gia_den)}`;
+    const mapUrl = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(`${it.ten_quan}, ${it.dia_chi}, ${it.quan}`);
+    return `<article class="card">
+      <div class="card-head"><h2>${esc(it.ten_quan)}</h2><span class="district">${esc(it.quan)}</span></div>
+      <p class="dish">${esc(it.ten_mon)}</p>
+      <p class="price">${priceText}</p>
+      <p class="addr"><a href="${mapUrl}" target="_blank" rel="noopener">${esc(it.dia_chi)}</a></p>
+      <div class="hours"><span>${hhmm(it.gio_mo)} – ${hhmm(it.gio_dong)}</span>
+        ${open === null ? "" : `<span class="status ${open ? "open" : "closed"}">${open ? "Đang mở" : "Đã đóng"}</span>`}</div>
+      <div class="card-actions">
+        <button class="btn btn-plain" type="button" data-act="edit" data-id="${esc(it.id)}">Sửa</button>
+        <button class="btn btn-plain btn-danger" type="button" data-act="del" data-id="${esc(it.id)}">Xóa</button>
+      </div>
+    </article>`;
+  }).join("");
+}
+
+/* ---------- Form thêm / sửa ---------- */
+const dlgForm = $("#dlgForm"), form = $("#form");
+
+function openForm(item) {
+  if (!isConfigured()) { openCfg(); return; }
+  editingId = item ? item.id : null;
+  $("#formTitle").textContent = item ? "Sửa quán ăn" : "Thêm quán ăn";
+  $("#btnSave").textContent = item ? "Lưu thay đổi" : "Lưu quán";
+  $("#formError").textContent = "";
+  form.reset();
+  if (item) {
+    ["ten_quan","dia_chi","quan","ten_mon","gia_tu","gia_den"].forEach(k => form.elements[k].value = item[k]);
+    form.elements.gio_mo.value = hhmm(item.gio_mo);
+    form.elements.gio_dong.value = hhmm(item.gio_dong);
+  } else if (districtFilter !== "all") {
+    const g = districtGroups().find(x => x.key === districtFilter);
+    if (g) form.elements.quan.value = g.label;
+  }
+  dlgForm.showModal();
+  form.elements.ten_quan.focus();
+}
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const f = form.elements;
+  const err = $("#formError");
+  const data = {
+    ten_quan: f.ten_quan.value.trim(),
+    dia_chi: f.dia_chi.value.trim(),
+    quan: f.quan.value.trim(),
+    ten_mon: f.ten_mon.value.trim(),
+    gia_tu: parseInt(f.gia_tu.value, 10),
+    gia_den: parseInt(f.gia_den.value, 10),
+    gio_mo: f.gio_mo.value,
+    gio_dong: f.gio_dong.value
+  };
+  if (!data.ten_quan || !data.dia_chi || !data.quan || !data.ten_mon) { err.textContent = "Vui lòng điền đủ tên quán, địa chỉ, quận và tên món."; return; }
+  if (isNaN(data.gia_tu) || isNaN(data.gia_den)) { err.textContent = "Vui lòng nhập giá thấp nhất và cao nhất."; return; }
+  if (data.gia_den < data.gia_tu) { err.textContent = "Giá cao nhất phải lớn hơn hoặc bằng giá thấp nhất."; return; }
+  if (!data.gio_mo || !data.gio_dong) { err.textContent = "Vui lòng chọn giờ mở và đóng cửa."; return; }
+  err.textContent = "";
+
+  const btn = $("#btnSave"); btn.disabled = true;
+  try {
+    if (editingId) {
+      await api(`?id=eq.${encodeURIComponent(editingId)}`, { method: "PATCH", body: JSON.stringify(data), headers: { Prefer: "return=minimal" } });
+    } else {
+      await api("", { method: "POST", body: JSON.stringify(data), headers: { Prefer: "return=minimal" } });
+    }
+    dlgForm.close();
+    toast(editingId ? "Đã lưu thay đổi" : "Đã thêm quán");
+    await load();
+  } catch (ex) {
+    err.textContent = ex.message;
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+/* ---------- Kết nối ---------- */
+const dlgCfg = $("#dlgCfg"), cfgForm = $("#cfgForm");
+function openCfg() {
+  const c = getCfg();
+  cfgForm.elements.url.value = c.url;
+  cfgForm.elements.key.value = c.key;
+  $("#cfgError").textContent = "";
+  dlgCfg.showModal();
+}
+cfgForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const url = cfgForm.elements.url.value.trim().replace(/\/+$/, "").replace(/\/rest\/v1$/, "");
+  const key = cfgForm.elements.key.value.trim();
+  if (!/^https:\/\/.+/.test(url)) { $("#cfgError").textContent = "Project URL phải bắt đầu bằng https://"; return; }
+  if (key.length < 10) { $("#cfgError").textContent = "Vui lòng dán key của dự án."; return; }
+  try { localStorage.setItem("sb_url", url); localStorage.setItem("sb_key", key); }
+  catch (ex) { $("#cfgError").textContent = "Trình duyệt không cho lưu. Hãy điền trực tiếp vào đầu đoạn script."; return; }
+  dlgCfg.close();
+  toast("Đã lưu kết nối");
+  load();
+});
+
+/* ---------- Sự kiện ---------- */
+$("#btnAdd").addEventListener("click", () => openForm(null));
+$("#btnCfg").addEventListener("click", openCfg);
+$("#btnCancel").addEventListener("click", () => dlgForm.close());
+$("#cfgCancel").addEventListener("click", () => dlgCfg.close());
+[dlgForm, dlgCfg].forEach(d => d.addEventListener("click", (e) => { if (e.target === d) d.close(); }));
+
+$("#search").addEventListener("input", (e) => { query = e.target.value; renderList(); });
+
+$("#chips").addEventListener("click", (e) => {
+  const b = e.target.closest(".chip"); if (!b) return;
+  districtFilter = b.dataset.d;
+  render();
+});
+
+$("#list").addEventListener("click", async (e) => {
+  if (e.target.id === "btnCfgEmpty") return openCfg();
+  if (e.target.id === "btnAddEmpty") return openForm(null);
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  const item = items.find(x => String(x.id) === b.dataset.id); if (!item) return;
+  if (b.dataset.act === "edit") return openForm(item);
+  if (b.dataset.act === "del") {
+    if (!confirm(`Xóa quán "${item.ten_quan}"?`)) return;
+    try {
+      await api(`?id=eq.${encodeURIComponent(item.id)}`, { method: "DELETE", headers: { Prefer: "return=minimal" } });
+      toast("Đã xóa quán");
+      await load();
+    } catch (ex) { toast(ex.message, true); }
+  }
+});
+
+load();
+setInterval(() => { if (items.length) renderList(); }, 60000); // cập nhật trạng thái "Đang mở"
+</script>
+</body>
+</html>
